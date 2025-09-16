@@ -1,0 +1,37 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "name": "Nguyen van a",
+      "email": "nva@gmail.com"
+    },
+    {
+      "name": "Nguyễn Phúc",
+      "dateOfBirth": "2010-03-09",
+      "email": "phuchb24@gmail.com",
+      "id": 2
+    }
+  ],
+  "todolist": [
+    {
+      "id": 3,
+      "name": "Giặt quần áo",
+      "status": true
+    },
+    {
+      "id": 4,
+      "name": "Nấu cơm",
+      "status": false
+    },
+    {
+      "id": 5,
+      "name": "Tưới cây",
+      "status": true
+    },
+    {
+      "id": 6,
+      "name": "Cho mèo ăn",
+      "status": false
+    }
+  ]
+}
