@@ -2,23 +2,28 @@ import axios from 'axios'
 import React, { useEffect, useRef, useState } from 'react'
 
 interface Work {
-    id: number,
-    name: string,
-    status: boolean,
+  id: number
+  name: string
+  status: boolean
 }
+
 export default function TodoList() {
-     const [work, setWork] = useState<Work[]>([])
+  const [work, setWork] = useState<Work[]>([])
   const [showModal, setShowModal] = useState(false)
   const [selectedWork, setSelectedWork] = useState<Work | null>(null)
   const [newWork, setNewWork] = useState('')
+  const [loading, setLoading] = useState(false) // <--- thêm state loading
   const inputRef = useRef<HTMLInputElement>(null)
 
   const fetchWork = async () => {
     try {
+      setLoading(true) // Bắt đầu loading
       const res = await axios.get<Work[]>('http://localhost:8080/todolist')
       setWork(res.data)
     } catch (error) {
       console.error('Lỗi khi gọi API:', error)
+    } finally {
+      setLoading(false) // Tắt loading
     }
   }
 
@@ -34,12 +39,15 @@ export default function TodoList() {
   const confirmDelete = async () => {
     if (!selectedWork) return
     try {
+      setLoading(true)
       await axios.delete(`http://localhost:8080/todolist/${selectedWork.id}`)
       setShowModal(false)
       setSelectedWork(null)
       fetchWork()
     } catch (error) {
       console.error('Lỗi khi xóa công việc:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -59,6 +67,7 @@ export default function TodoList() {
     }
 
     try {
+      setLoading(true)
       await axios.post('http://localhost:8080/todolist', {
         name,
         status: false
@@ -68,9 +77,10 @@ export default function TodoList() {
       fetchWork()
     } catch (error) {
       console.error('Lỗi khi thêm công việc:', error)
+    } finally {
+      setLoading(false)
     }
   }
-
 
   return (
     <div className="container py-5">
@@ -80,13 +90,16 @@ export default function TodoList() {
 
           <div className="mb-3 shadow-sm p-3 rounded">
             <input
+              ref={inputRef}
               type="text"
               className="form-control"
+              value={newWork}
+              onChange={(e) => setNewWork(e.target.value)}
               placeholder="Nhập tên công việc"
             />
-           <button
-              className="btn btn-primary mt-3 w-100"
+            <button
               onClick={handleAddWork}
+              className="btn btn-primary mt-3 w-100"
             >
               Thêm công việc
             </button>
@@ -99,37 +112,51 @@ export default function TodoList() {
               <button className="btn btn-outline-primary">Đang thực hiện</button>
             </div>
           </div>
+
           <ul
-            className="list-group mb-3 p-3 shadow-sm rounded"
+            className="list-group mb-3 p-3 shadow-sm rounded position-relative"
             style={{
               maxHeight: '300px',
-              overflowY: work.length > 5 ? 'auto' : 'visible'
+              overflowY: work.length > 5 ? 'auto' : 'visible',
+              minHeight: '150px'
             }}
           >
-            {work.slice(0, 5).map((item) => (
-              <li
-                key={item.id}
-                className="list-group-item d-flex justify-content-between align-items-center"
+            {loading ? (
+              <div
+                className="d-flex justify-content-center align-items-center"
+                style={{ height: '150px' }}
               >
-                <div>
-                  <input
-                    className="form-check-input me-2"
-                    type="checkbox"
-                    readOnly
-                  />
-                  {item.name}
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Loading...</span>
                 </div>
-                <div>
-                  <button className="btn btn-sm me-1">✏️</button>
-                  <button
-                    className="btn btn-sm"
-                    onClick={() => handleDeleteClick(item)}
-                  >
-                    🗑️
-                  </button>
-                </div>
-              </li>
-            ))}
+              </div>
+            ) : (
+              work.slice(0, 5).map((item) => (
+                <li
+                  key={item.id}
+                  className="list-group-item d-flex justify-content-between align-items-center"
+                >
+                  <div>
+                    <input
+                      className="form-check-input me-2"
+                      type="checkbox"
+                      readOnly
+                      checked={item.status}
+                    />
+                    {item.name}
+                  </div>
+                  <div>
+                    <button className="btn btn-sm me-1">✏️</button>
+                    <button
+                      className="btn btn-sm"
+                      onClick={() => handleDeleteClick(item)}
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </li>
+              ))
+            )}
           </ul>
 
           <div className="d-flex justify-content-between gap-2">
@@ -138,6 +165,7 @@ export default function TodoList() {
           </div>
         </div>
       </div>
+
       {showModal && selectedWork && (
         <div
           className="modal fade show"
